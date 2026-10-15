@@ -65,6 +65,7 @@ npm test             # 358 tes (vitest)
 npm run test:watch   # tes mode watch
 npm run audit:layout # audit tata letak teks semua animasi + template
 npm run samples      # render semua aset ke ./samples untuk diperiksa
+npm run zips         # tulis ZIP sungguhan per template ke ./samples/zips
 ```
 
 Konfigurasi opsional — salin `.env.example` menjadi `.env.local`:
@@ -111,7 +112,8 @@ src/
                       Premium, Guide, Owner, 404
   styles/             tokens.css, base.css, components.css, pages.css
   i18n/               Kamus Indonesia & Inggris
-tools/                Skrip bantu pengembangan (render contoh, audit tata letak, smoke HTTP)
+tools/                Skrip bantu pengembangan: render contoh, audit tata letak,
+                      tulis ZIP nyata, smoke HTTP
 ```
 
 ---
@@ -240,6 +242,7 @@ Yang diperiksa (358 tes):
 | `src/animations/animations.test.ts` | 37 animasi × validitas SVG, referensi id, dimensi, transparansi, semua palet; 22 template × kelengkapan file & tautan aset |
 | `src/animations/layout.test.ts` | Audit tata letak: tidak ada teks yang keluar kanvas atau bertabrakan, di tiga ukuran (kecil, default, besar), untuk animasi maupun aset di dalam template |
 | `src/lib/zip.test.ts` | Struktur ZIP, CRC32, ukuran, kompresi, nama non-latin, arsip kosong |
+| — (verifikasi manual) | 22 ZIP nyata ditulis ke disk lalu diperiksa dengan `zipfile` Python: CRC setiap entri benar, semua tautan `./assets/*.svg` ada di dalam arsip, dan tidak ada SVG inline yang bocor ke teks README |
 | `src/lib/license.test.ts` | Format kode, tier, normalisasi input, penolakan kode palsu, keunikan |
 | `src/app/acceptance.test.tsx` | Aturan produk: "copy" hanya teks README.md (tanpa SVG inline), ZIP berisi README + semua file animasi, skala ukuran proporsional, dan kunci premium |
 | `src/app/pages.test.tsx` | Smoke test semua halaman lewat SSR, penguncian premium, keamanan renderer markdown |
