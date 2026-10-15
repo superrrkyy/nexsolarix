@@ -8,17 +8,17 @@
   ],
   "scripts": {
     "dev": "npm run build --workspace @nexsolarix/astronomy && concurrently -k -n API,WEB -c cyan,green \"npm run dev --workspace @nexsolarix/api\" \"npm run dev --workspace @nexsolarix/web\"",
-    "dev:web": "npm run dev --workspace @nexsolarix/web",
+    "dev:web": "npm run build --workspace @nexsolarix/astronomy && npm run dev --workspace @nexsolarix/web",
     "preview": "npm run preview --workspace @nexsolarix/web",
-    "dev:api": "npm run dev --workspace @nexsolarix/api",
+    "dev:api": "npm run build --workspace @nexsolarix/astronomy && npm run dev --workspace @nexsolarix/api",
     "build": "npm run build --workspace @nexsolarix/astronomy && npm run build --workspace @nexsolarix/api && npm run build --workspace @nexsolarix/web",
     "lint": "npm run lint --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test --workspace @nexsolarix/web && npm run test --workspace @nexsolarix/api",
+    "typecheck": "npm run build --workspace @nexsolarix/astronomy && npm run typecheck --workspaces --if-present",
+    "test": "npm run build --workspace @nexsolarix/astronomy && npm run test --workspace @nexsolarix/web && npm run test --workspace @nexsolarix/api",
     "test:e2e": "npm run test:e2e --workspace @nexsolarix/web",
     "db:generate": "npm run db:generate --workspace @nexsolarix/api",
     "db:migrate": "npm run db:migrate --workspace @nexsolarix/api",
-    "db:seed": "npm run db:seed --workspace @nexsolarix/api"
+    "db:seed": "npm run build --workspace @nexsolarix/astronomy && npm run db:seed --workspace @nexsolarix/api"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",

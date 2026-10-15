@@ -46,7 +46,7 @@ export function ExplorerPage({ solarOnly = false }: { solarOnly?: boolean }) {
   return (
     <main className={`explorer-workspace${solarOnly ? ' explorer-workspace--solar' : ''}`}>
       <div className="explorer-backdrop-grid" aria-hidden="true" />
-      {!accessibleMode ? <UniverseCanvas className="explorer-canvas" showNote={false} /> : <div className="explorer-catalog-stage"><SceneCatalog /></div>}
+      {!accessibleMode ? <UniverseCanvas className="explorer-canvas" showNote={false} fitSystem /> : <div className="explorer-catalog-stage"><SceneCatalog /></div>}
 
       <div className="explorer-scene-title">
         <span className="scene-title-kicker"><i />{solarOnly ? 'SOLAR SYSTEM / LOCAL MODEL' : 'NEXSOLARIX / INTERACTIVE ATLAS'}</span>

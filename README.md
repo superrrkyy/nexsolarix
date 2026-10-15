@@ -62,6 +62,8 @@ npm run test         # Vitest / React tests and API unit tests
 npm run test:e2e     # Playwright browser flows
 ```
 
+Root `typecheck`, `test`, `dev:web`, `dev:api`, and `db:seed` commands build the shared astronomy package first. Its generated `dist` output is intentionally excluded from Git, so a clean checkout needs no prebuilt artifacts. `npm run preview` expects a prior production build.
+
 Playwright requires a browser binary. Install Chromium once with `npx playwright install chromium` (CI installs it automatically). If your environment blocks the Playwright CDN, the E2E suite remains available but cannot launch locally until Chromium is supplied.
 
 ## Database foundation (optional)

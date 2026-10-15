@@ -26,7 +26,7 @@ export function TimeControls({ compact = false, showGraphics = false }: { compac
   };
 
   return (
-    <div className={`time-controls${compact ? ' time-controls--compact' : ''}`} aria-label="Simulation time controls">
+    <div className={`time-controls${compact ? ' time-controls--compact' : ''}`} role="group" aria-label="Simulation time controls">
       <div className="time-readout">
         <span className="time-readout-icon"><CalendarClock size={16} /></span>
         <span className="time-readout-copy"><small>SIMULATION DATE</small><strong>{formatted}</strong></span>

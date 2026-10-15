@@ -39,7 +39,7 @@ export function ObjectInfoPanel({ className = '' }: { className?: string }) {
       </div>
       <p className="selected-object-description">{object.description}</p>
 
-      <div className="relationship-path" aria-label="Object relationship path">
+      <nav className="relationship-path" aria-label="Object relationship path">
         <span><GitBranch size={13} />SYSTEM PATH</span>
         <div className="relationship-crumbs">
           {path.map((item, index) => (
@@ -49,7 +49,7 @@ export function ObjectInfoPanel({ className = '' }: { className?: string }) {
             </span>
           ))}
         </div>
-      </div>
+      </nav>
 
       <div className="panel-stat-list">
         {stats.slice(0, 3).map((fact) => (
@@ -71,7 +71,11 @@ export function ObjectInfoPanel({ className = '' }: { className?: string }) {
                 <span className="related-object-dot" style={{ backgroundColor: child.color }} />{child.name}<ArrowUpRight size={13} />
               </Link>
             ))}
-            {children.length > 4 && <Link className="related-more" to="/moons">View all {children.length} moons <ArrowUpRight size={13} /></Link>}
+            {children.length > 4 && (
+              <Link className="related-more" to={object.kind === 'star' ? '/planets' : '/moons'}>
+                View all {children.length} {object.kind === 'star' ? 'planets' : 'moons'} <ArrowUpRight size={13} />
+              </Link>
+            )}
           </div>
         </div>
       )}

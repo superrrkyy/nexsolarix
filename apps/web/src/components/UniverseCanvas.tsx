@@ -2,9 +2,10 @@ import { Suspense, useEffect, useMemo, useRef, type RefObject } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Html, Line, OrbitControls } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
-import { AdditiveBlending, BackSide, BufferGeometry, DoubleSide, Float32BufferAttribute, Group, Vector3 } from 'three';
+import { AdditiveBlending, BackSide, BufferGeometry, DoubleSide, Float32BufferAttribute, Group, PerspectiveCamera, Vector3 } from 'three';
 import { OBJECTS, ORBIT_MODEL_NOTE, PLANETS, type CelestialObject } from '@nexsolarix/astronomy';
 import { ORBIT_DISPLAY_SCALE, heliocentricPosition, orbitPathAtDate } from '../lib/orbitalMechanics';
+import { overviewCameraDistance } from '../lib/sceneFraming';
 import { useExplorerStore } from '../stores/useExplorerStore';
 
 const planetObjects = PLANETS.filter((object) => object.orbitalElements);
@@ -165,16 +166,43 @@ function SunBody() {
   );
 }
 
-function CameraRig({ controlsRef, focusOnSelect, resetVersion }: { controlsRef: RefObject<OrbitControlsImpl | null>; focusOnSelect: boolean; resetVersion: number }) {
-  const { camera } = useThree();
+function CameraRig({
+  controlsRef,
+  focusOnSelect,
+  resetVersion,
+  fitSystem,
+  userInteractedRef
+}: {
+  controlsRef: RefObject<OrbitControlsImpl | null>;
+  focusOnSelect: boolean;
+  resetVersion: number;
+  fitSystem: boolean;
+  userInteractedRef: RefObject<boolean>;
+}) {
+  const { camera, size } = useThree();
   const targetPosition = useRef(new Vector3(0, 0, 0));
   const cameraPosition = useRef(new Vector3(0, 8.6, 17.5));
+  const overviewDirection = useMemo(() => new Vector3(0, 8.6, 17.5).normalize(), []);
   const transitioning = useRef(false);
   const selectedId = useExplorerStore((state) => state.selectedObjectId);
   const focusVersion = useExplorerStore((state) => state.focusVersion);
+  const aspectRatio = size.width / Math.max(size.height, 1);
+  const fieldOfView = camera instanceof PerspectiveCamera ? camera.fov : 43;
+
+  useEffect(() => {
+    if (!fitSystem || focusVersion !== 0 || userInteractedRef.current) return;
+    const distance = overviewCameraDistance(aspectRatio, fieldOfView);
+    targetPosition.current.set(0, 0, 0);
+    cameraPosition.current.copy(overviewDirection).multiplyScalar(distance);
+    camera.position.copy(cameraPosition.current);
+    controlsRef.current?.target.set(0, 0, 0);
+    controlsRef.current?.update();
+    transitioning.current = false;
+  }, [aspectRatio, camera, controlsRef, fieldOfView, fitSystem, focusVersion, overviewDirection, userInteractedRef]);
 
   useEffect(() => {
     if (!focusOnSelect || focusVersion === 0) return;
+    userInteractedRef.current = true;
     const selected = objectById.get(selectedId);
     const date = useExplorerStore.getState().simulationTime;
     const target = selected ? currentPosition(selected, date) : new Vector3();
@@ -182,14 +210,20 @@ function CameraRig({ controlsRef, focusOnSelect, resetVersion }: { controlsRef: 
     const distance = selectedId === 'sun' ? 5.2 : selected?.kind === 'planet' ? 2.4 : 3.6;
     cameraPosition.current.copy(target).add(new Vector3(0, distance * 0.44, distance));
     transitioning.current = true;
-  }, [camera, focusOnSelect, focusVersion, selectedId]);
+  }, [camera, focusOnSelect, focusVersion, selectedId, userInteractedRef]);
 
   useEffect(() => {
     if (resetVersion === 0) return;
+    userInteractedRef.current = false;
     targetPosition.current.set(0, 0, 0);
-    cameraPosition.current.set(0, 8.6, 17.5);
+    if (fitSystem) {
+      const distance = overviewCameraDistance(aspectRatio, fieldOfView);
+      cameraPosition.current.copy(overviewDirection).multiplyScalar(distance);
+    } else {
+      cameraPosition.current.set(0, 8.6, 17.5);
+    }
     transitioning.current = true;
-  }, [resetVersion]);
+  }, [aspectRatio, camera, fieldOfView, fitSystem, overviewDirection, resetVersion, userInteractedRef]);
 
   useFrame((_state, delta) => {
     if (!transitioning.current) return;
@@ -205,8 +239,9 @@ function CameraRig({ controlsRef, focusOnSelect, resetVersion }: { controlsRef: 
   return null;
 }
 
-function SolarScene({ focusOnSelect, starCount }: { focusOnSelect: boolean; starCount: number }) {
+function SolarScene({ focusOnSelect, fitSystem, starCount }: { focusOnSelect: boolean; fitSystem: boolean; starCount: number }) {
   const controlsRef = useRef<OrbitControlsImpl>(null);
+  const userInteractedRef = useRef(false);
   const simulationTime = useExplorerStore((state) => state.simulationTime);
   const resetVersion = useExplorerStore((state) => state.cameraResetVersion);
   const date = useMemo(() => new Date(simulationTime), [simulationTime]);
@@ -220,8 +255,23 @@ function SolarScene({ focusOnSelect, starCount }: { focusOnSelect: boolean; star
       <OrbitalPaths date={date} />
       <SunBody />
       {planetObjects.map((object) => <PlanetBody key={object.id} object={object} />)}
-      <CameraRig controlsRef={controlsRef} focusOnSelect={focusOnSelect} resetVersion={resetVersion} />
-      <OrbitControls ref={controlsRef} makeDefault target={initialTarget} enablePan enableZoom enableRotate minDistance={1.2} maxDistance={42} zoomSpeed={0.7} rotateSpeed={0.52} panSpeed={0.55} dampingFactor={0.08} enableDamping />
+      <CameraRig controlsRef={controlsRef} focusOnSelect={focusOnSelect} fitSystem={fitSystem} resetVersion={resetVersion} userInteractedRef={userInteractedRef} />
+      <OrbitControls
+        ref={controlsRef}
+        makeDefault
+        target={initialTarget}
+        enablePan
+        enableZoom
+        enableRotate
+        minDistance={1.2}
+        maxDistance={fitSystem ? 220 : 42}
+        zoomSpeed={0.7}
+        rotateSpeed={0.52}
+        panSpeed={0.55}
+        dampingFactor={0.08}
+        enableDamping
+        onStart={() => { userInteractedRef.current = true; }}
+      />
       <TimeAdvancer />
     </>
   );
@@ -239,27 +289,29 @@ export function UniverseCanvas({
   className = '',
   focusOnSelect = true,
   showNote = false,
-  interactive = true
+  interactive = true,
+  fitSystem = false
 }: {
   className?: string;
   focusOnSelect?: boolean;
   showNote?: boolean;
   interactive?: boolean;
+  fitSystem?: boolean;
 }) {
   const graphicsMode = useExplorerStore((state) => state.graphicsMode);
   const starCount = useMemo(() => graphicsStarCount(graphicsMode), [graphicsMode]);
 
   return (
-    <div className={`universe-canvas ${className}`} aria-label="Interactive 3D model of the Solar System">
+    <div className={`universe-canvas ${className}`} role="group" aria-label="Interactive 3D model of the Solar System">
       <Canvas
         dpr={graphicsMode === 'ultra' ? [1, 2] : graphicsMode === 'high' ? [1, 1.7] : [1, 1.25]}
-        camera={{ position: [0, 8.6, 17.5], fov: 43, near: 0.1, far: 180 }}
+        camera={{ position: [0, 8.6, 17.5], fov: 43, near: 0.1, far: fitSystem ? 280 : 180 }}
         gl={{ antialias: graphicsMode !== 'low', alpha: false, powerPreference: 'high-performance' }}
         fallback={<div className="webgl-fallback">3D graphics are unavailable in this browser. Use the object list to explore the catalog.</div>}
         aria-label="Solar System 3D canvas"
       >
         <Suspense fallback={null}>
-          <SolarScene focusOnSelect={focusOnSelect && interactive} starCount={starCount} />
+          <SolarScene focusOnSelect={focusOnSelect && interactive} fitSystem={fitSystem} starCount={starCount} />
         </Suspense>
       </Canvas>
       {showNote && <div className="scene-model-note"><span className="note-dot" />Schematic scale · {ORBIT_MODEL_NOTE.split('.')[0]}.</div>}

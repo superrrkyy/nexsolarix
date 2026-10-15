@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowUpRight, Search, Sparkles } from 'lucide-react';
 import { MISSIONS, OBJECTS, type CelestialObject, type MissionRecord } from '@nexsolarix/astronomy';
@@ -26,6 +26,9 @@ function makeEntries(query: string): SearchEntry[] {
 export function SearchBox({ className = '' }: { className?: string }) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
+  const id = useId();
+  const listboxId = `${id}-results`;
+  const isPopoverOpen = open && query.trim().length > 0;
   const [activeIndex, setActiveIndex] = useState(-1);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -91,44 +94,43 @@ export function SearchBox({ className = '' }: { className?: string }) {
           placeholder="Search worlds, missions…"
           aria-label="Search astronomical objects and missions"
           aria-autocomplete="list"
-          aria-expanded={open && results.length > 0}
-          aria-controls="search-results"
-          aria-activedescendant={activeIndex >= 0 && activeIndex < results.length ? `search-option-${activeIndex}` : undefined}
+          aria-expanded={isPopoverOpen}
+          aria-controls={isPopoverOpen ? listboxId : undefined}
+          aria-activedescendant={activeIndex >= 0 && activeIndex < results.length ? `${id}-option-${activeIndex}` : undefined}
           onFocus={() => setOpen(true)}
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={handleKeyDown}
         />
         <kbd className="search-shortcut" aria-hidden="true">⌘ K</kbd>
       </form>
-      {open && query.trim().length > 0 && (
-        <div className="search-popover" id="search-results" role="listbox" aria-label="Search suggestions">
-          {results.length > 0 ? (
-            <>
-              <p className="search-popover-label">Suggested destinations</p>
-              {results.map((result, index) => (
-                <button
-                  className={`search-result${index === activeIndex ? ' is-active' : ''}`}
-                  id={`search-option-${index}`}
-                  key={`${result.kind}-${result.id}`}
-                  type="button"
-                  role="option"
-                  aria-selected={index === activeIndex}
-                  onMouseEnter={() => setActiveIndex(index)}
-                  onClick={() => select(result.to)}
-                >
-                  <span className={`search-result-orb ${result.object ? `orb-${result.object.id}` : 'orb-mission'}`}>
-                    {result.mission ? <Sparkles size={15} /> : null}
-                  </span>
-                  <span className="search-result-copy">
-                    <strong>{result.name}</strong>
-                    <small>{result.kind} <span>·</span> {result.description}</small>
-                  </span>
-                  <ArrowUpRight size={15} className="search-result-arrow" aria-hidden="true" />
-                </button>
-              ))}
-            </>
-          ) : (
-            <div className="search-empty">
+      {isPopoverOpen && (
+        <div className="search-popover">
+          {results.length > 0 && <p className="search-popover-label">Suggested destinations</p>}
+          <div id={listboxId} role="listbox" aria-label="Search suggestions">
+            {results.map((result, index) => (
+              <button
+                className={`search-result${index === activeIndex ? ' is-active' : ''}`}
+                id={`${id}-option-${index}`}
+                key={`${result.kind}-${result.id}`}
+                type="button"
+                role="option"
+                aria-selected={index === activeIndex}
+                onMouseEnter={() => setActiveIndex(index)}
+                onClick={() => select(result.to)}
+              >
+                <span className={`search-result-orb ${result.object ? `orb-${result.object.id}` : 'orb-mission'}`}>
+                  {result.mission ? <Sparkles size={15} /> : null}
+                </span>
+                <span className="search-result-copy">
+                  <strong>{result.name}</strong>
+                  <small>{result.kind} <span>·</span> {result.description}</small>
+                </span>
+                <ArrowUpRight size={15} className="search-result-arrow" aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+          {results.length === 0 && (
+            <div className="search-empty" role="status">
               <span>No local catalog matches yet.</span>
               <small>Try a planet, moon, or mission name.</small>
             </div>

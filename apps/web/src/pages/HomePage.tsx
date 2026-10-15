@@ -24,7 +24,7 @@ export function HomePage() {
         <div className="hero-copy">
           <div className="eyebrow"><span className="eyebrow-line" />A DIGITAL OBSERVATORY <span className="eyebrow-index">01 / 04</span></div>
           <h1>Explore the universe,<br /><em>one world at a time.</em></h1>
-          <p className="hero-description">A living astronomical atlas for traveling through our Solar System, meeting the worlds within it, and following the science that reveals them.</p>
+          <p className="hero-description">An interactive astronomical atlas for traveling through our Solar System, meeting the worlds within it, and following the science that reveals them.</p>
           <div className="hero-actions">
             <Link to="/explore" className="button button-primary button-large">Enter the observatory <ArrowUpRight size={17} /></Link>
             <Link to="/solar-system" className="button button-quiet button-large">Solar System <ArrowRight size={16} /></Link>
@@ -37,7 +37,7 @@ export function HomePage() {
           </div>
         </div>
 
-        <div className="hero-visual" aria-label="Interactive schematic preview of the Solar System">
+        <div className="hero-visual" role="group" aria-label="Interactive schematic preview of the Solar System">
           <div className="hero-visual-label"><span><i /> LIVE ORBITAL MODEL</span><span>SCHEMATIC SCALE</span></div>
           <UniverseCanvas className="hero-canvas" focusOnSelect={false} showNote={false} />
           <div className="hero-caption-card">
@@ -87,7 +87,7 @@ export function HomePage() {
           <p>Set the clock in motion. Select a world, read its measured properties, then follow the sources behind each value.</p>
           <div className="solar-feature-actions"><Link className="button button-primary" to="/solar-system">Explore the Solar System <ArrowUpRight size={16} /></Link><span><span className="tiny-orbit" /> 8 planets · 10 curated moons</span></div>
         </div>
-        <div className="planet-marquee" aria-label="Solar System planet links">
+        <nav className="planet-marquee" aria-label="Solar System planet links">
           {PLANETS.map((planet, index) => (
             <Link className={`planet-marquee-item planet-marquee-item--${planet.id}`} to={`/objects/${planet.id}`} key={planet.id}>
               <span className="planet-marquee-number">0{index + 1}</span>
@@ -96,7 +96,7 @@ export function HomePage() {
               <ArrowUpRight size={14} className="planet-marquee-arrow" />
             </Link>
           ))}
-        </div>
+        </nav>
       </section>
 
       <section className="featured-worlds section-shell">

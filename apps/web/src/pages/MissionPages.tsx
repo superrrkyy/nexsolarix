@@ -37,7 +37,7 @@ export function MissionDetailPage() {
   return (
     <main className="mission-detail-page page-shell">
       <Seo title={`NexSolarix — ${mission.name}`} description={mission.description} path={`/missions/${mission.id}`} />
-      <div className="profile-breadcrumbs"><Link to="/missions">Missions</Link><span>/</span><span>{mission.name}</span></div>
+      <nav className="profile-breadcrumbs" aria-label="Breadcrumb"><Link to="/missions">Missions</Link><span>/</span><span>{mission.name}</span></nav>
       <section className="mission-detail-hero">
         <div className="mission-detail-symbol"><div className="mission-detail-orbit" /><Rocket size={27} /></div>
         <div className="mission-detail-copy"><div className="page-kicker"><span />MISSION RECORD · {mission.agency.toUpperCase()}</div><h1>{mission.name}<span className="profile-title-period">.</span></h1><p>{mission.description}</p><span className="mission-status-pill"><i />{mission.status}</span></div>

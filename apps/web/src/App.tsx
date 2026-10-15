@@ -37,9 +37,9 @@ function RouteFrame() {
     <div className="app-frame">
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <TopNav />
-      <ErrorBoundary>
+      <ErrorBoundary key={location.pathname}>
         <Suspense fallback={<LoadingScreen />}>
-          <div id="main-content">
+          <div id="main-content" tabIndex={-1}>
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/explore" element={<ExplorerPage />} />

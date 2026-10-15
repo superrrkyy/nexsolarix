@@ -48,7 +48,11 @@ export function ObjectProfilePage() {
   const missionItems = (relatedMissionIds[object.id] ?? []).map((missionId) => MISSIONS.find((mission) => mission.id === missionId)).filter((mission) => mission !== undefined);
   const primaryFact = object.facts.find((fact) => fact.key === 'mean-radius') ?? object.facts[0];
   const source = primaryFact?.sourceIds[0] ? getSource(primaryFact.sourceIds[0]) : undefined;
-  const habitabilityStatus = object.lifeStatus ?? object.facts.find((fact) => fact.key === 'life-status')?.value ?? 'Unknown';
+  const habitabilityFact = object.facts.find((fact) => fact.key === 'life-status')
+    ?? object.facts.find((fact) => fact.key === 'ocean-evidence');
+  const habitabilitySourceId = habitabilityFact?.sourceIds[0];
+  const habitabilitySource = habitabilitySourceId ? getSource(habitabilitySourceId) : undefined;
+  const habitabilityStatus = object.lifeStatus ?? habitabilityFact?.value ?? 'Unknown';
   const quickKeys = ['mean-radius', 'mass', 'semi-major-axis', 'orbital-period'];
   const facts = quickKeys.map((key) => object.facts.find((fact) => fact.key === key)).filter((fact) => fact !== undefined);
   const profileDescription = `${object.name} — ${object.typeLabel}. ${object.description}`;
@@ -57,10 +61,10 @@ export function ObjectProfilePage() {
     <main className="profile-page">
       <Seo title={`NexSolarix — ${object.name}`} description={profileDescription} path={`/objects/${object.id}`} />
       <div className="profile-topbar">
-        <div className="profile-breadcrumbs" aria-label="Breadcrumb">
+        <nav className="profile-breadcrumbs" aria-label="Breadcrumb">
           <Link to="/explore">Atlas</Link><span>/</span>
           {path.map((item, index) => <span className="breadcrumb-item" key={item.id}>{index > 0 && <span>/</span>}<Link to={`/objects/${item.id}`}>{item.name}</Link></span>)}
-        </div>
+        </nav>
         <div className="profile-top-actions">
           <Link className="profile-scene-link" to="/solar-system" onClick={() => setSelectedObject(object.kind === 'moon' && parent ? parent.id : object.id)}><Orbit size={15} />{object.kind === 'moon' ? 'View parent world' : 'Open 3D scene'}</Link>
           <button className="profile-compare-button" type="button" onClick={() => navigate(`/compare?a=${object.id}&b=${object.id === 'earth' ? 'mars' : 'earth'}`)}><Scale size={15} /> Compare</button>
@@ -128,7 +132,7 @@ export function ObjectProfilePage() {
                 <div className="context-card-icon"><Sparkles size={17} /></div><span className="context-card-label">HABITABILITY</span>
                 <h3>{habitabilityStatus}</h3>
                 <p>{object.kind === 'star' ? 'Habitability is not assessed for stars. Life-related labels apply to planetary environments, and no extraterrestrial life has been confirmed.' : habitabilityStatus === 'Confirmed life' ? 'Earth is the only world currently known to host life. No extraterrestrial life has been confirmed.' : habitabilityStatus.includes('Potentially') ? 'Potential habitability refers to conditions of scientific interest. It is not evidence that life exists or existed.' : habitabilityStatus.includes('Evidence') ? 'Past habitability is different from evidence for past life. No life has been confirmed on this world.' : 'No confirmed evidence of life is recorded for this world. Scientific knowledge may be incomplete.'}</p>
-                {source && <a href={source.url} target="_blank" rel="noreferrer" className="text-link">Read source <ArrowUpRight size={13} /></a>}
+                {habitabilitySource && <a href={habitabilitySource.url} target="_blank" rel="noreferrer" className="text-link">Read source <ArrowUpRight size={13} /></a>}
               </article>
               <article className="context-card">
                 <div className="context-card-icon"><Orbit size={17} /></div><span className="context-card-label">ORBITAL CONTEXT</span>

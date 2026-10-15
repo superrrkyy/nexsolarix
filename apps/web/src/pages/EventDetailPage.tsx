@@ -9,7 +9,7 @@ export function EventDetailPage() {
   return (
     <main className="event-detail-page page-shell">
       <Seo title="NexSolarix — Event record unavailable" description="No verified local astronomical event record matches this identifier." path={`/events/${id ?? ''}`} />
-      <div className="profile-breadcrumbs"><Link to="/events">Events</Link><span>/</span><span>{id ?? 'Unknown event'}</span></div>
+      <nav className="profile-breadcrumbs" aria-label="Breadcrumb"><Link to="/events">Events</Link><span>/</span><span>{id ?? 'Unknown event'}</span></nav>
       <section className="event-detail-empty">
         <div className="event-detail-icon"><CalendarDays size={21} /><span /></div>
         <span className="section-kicker"><span>EVENT RECORD</span> NOT IN LOCAL SNAPSHOT</span>
