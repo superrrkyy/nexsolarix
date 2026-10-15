@@ -1,0 +1,32 @@
+{
+  "name": "nexsolarix",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "NexSolarix - premium README.md templates and animated SVG gallery",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "audit:layout": "vite-node tools/audit-layout.ts",
+    "samples": "vite-node tools/render-samples.ts -- samples"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^4.5.0",
+    "jsdom": "^30.1.3",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.4"
+  }
+}

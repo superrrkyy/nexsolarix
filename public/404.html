@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NexSolarix</title>
+    <meta name="robots" content="noindex" />
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #05060c;
+        color: #e9e6ff;
+        font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+      }
+      a {
+        color: #a78bfa;
+      }
+    </style>
+    <script>
+      /*
+       * Static hosts without rewrite rules (e.g. GitHub Pages) serve this file
+       * for unknown paths. Keep the requested path in the query string and
+       * hand it to the single-page app, which restores it on boot.
+       */
+      (function () {
+        var path = window.location.pathname + window.location.search + window.location.hash;
+        var base = '/';
+        var marker = '/404.html';
+        if (window.location.pathname.indexOf(marker) !== -1) {
+          base = window.location.pathname.slice(0, window.location.pathname.indexOf(marker)) || '/';
+        }
+        var target = base + '?p=' + encodeURIComponent(path.replace(base, ''));
+        window.location.replace(target);
+      })();
+    </script>
+  </head>
+  <body>
+    <p>Mengalihkan… · <a href="/">Buka NexSolarix</a></p>
+  </body>
+</html>
