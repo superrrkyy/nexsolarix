@@ -1,0 +1,26 @@
+{
+  "name": "NexSolarix — README Template & Animasi SVG",
+  "short_name": "NexSolarix",
+  "description": "Koleksi template README.md dan animasi SVG premium dengan preview langsung dan kustomisasi interaktif.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#05060c",
+  "theme_color": "#05060c",
+  "orientation": "any",
+  "categories": ["developer", "design", "productivity"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

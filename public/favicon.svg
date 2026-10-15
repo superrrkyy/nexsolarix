@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="NexSolarix">
+  <defs>
+    <linearGradient id="nxs-a" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7c5cff" />
+      <stop offset="55%" stop-color="#35d0ff" />
+      <stop offset="100%" stop-color="#ff5cc8" />
+    </linearGradient>
+    <radialGradient id="nxs-b" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+    <style>
+      .nxs-orbit { transform-origin: 32px 32px; animation: nxs-spin 9s linear infinite; }
+      .nxs-core { animation: nxs-pulse 3.4s ease-in-out infinite; }
+      @keyframes nxs-spin { to { transform: rotate(360deg); } }
+      @keyframes nxs-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.72; } }
+      @media (prefers-reduced-motion: reduce) {
+        .nxs-orbit, .nxs-core { animation: none; }
+      }
+    </style>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="#05060c" />
+  <circle cx="32" cy="32" r="20" fill="url(#nxs-b)" opacity="0.35" />
+  <g class="nxs-core">
+    <circle cx="32" cy="32" r="9" fill="url(#nxs-a)" />
+  </g>
+  <g class="nxs-orbit" fill="none" stroke="url(#nxs-a)" stroke-width="2">
+    <ellipse cx="32" cy="32" rx="21" ry="9" opacity="0.85" />
+    <ellipse cx="32" cy="32" rx="9" ry="21" opacity="0.5" transform="rotate(0 32 32)" />
+  </g>
+  <circle cx="53" cy="32" r="2.6" fill="#35d0ff" />
+</svg>
