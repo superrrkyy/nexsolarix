@@ -42,7 +42,7 @@ NexSolarix adalah studio web untuk mempercantik profil atau repo GitHub: **22 te
 **Teknis**
 - React 19 + Vite 6 + TypeScript strict. Tanpa backend, tanpa database, tanpa API key.
 - Penulis ZIP sendiri (memakai `CompressionStream('deflate-raw')`, fallback ke STORE) — nol dependency.
-- 353 tes: validasi setiap SVG (referensi `url(#id)` harus resolve, tanpa `<script>`, durasi valid), audit tata letak teks, struktur ZIP + CRC32, kebijakan salin/unduh, algoritme kode lisensi, dan smoke test semua halaman — termasuk uji runtime di DOM (jsdom) untuk halaman detail, kunci premium, tab README, filter galeri, dan command palette.
+- 358 tes: validasi setiap SVG (referensi `url(#id)` harus resolve, tanpa `<script>`, durasi valid), audit tata letak teks, struktur ZIP + CRC32, kebijakan salin/unduh, algoritme kode lisensi, dan smoke test semua halaman — termasuk uji runtime di DOM (jsdom) untuk halaman detail, kunci premium, tab README, filter galeri, dan command palette.
 
 ---
 
@@ -61,7 +61,7 @@ Perintah lain:
 npm run build        # typecheck + build produksi ke dist/
 npm run preview      # jalankan hasil build
 npm run typecheck    # TypeScript strict
-npm test             # 353 tes (vitest)
+npm test             # 358 tes (vitest)
 npm run test:watch   # tes mode watch
 npm run audit:layout # audit tata letak teks semua animasi + template
 npm run samples      # render semua aset ke ./samples untuk diperiksa
@@ -233,7 +233,7 @@ Template baru dibuat dengan memanggil `buildFiles()` di `src/templates/shared.ts
 npm test
 ```
 
-Yang diperiksa (353 tes):
+Yang diperiksa (358 tes):
 
 | Berkas | Cakupan |
 | --- | --- |
@@ -244,6 +244,7 @@ Yang diperiksa (353 tes):
 | `src/app/acceptance.test.tsx` | Aturan produk: "copy" hanya teks README.md (tanpa SVG inline), ZIP berisi README + semua file animasi, skala ukuran proporsional, dan kunci premium |
 | `src/app/pages.test.tsx` | Smoke test semua halaman lewat SSR, penguncian premium, keamanan renderer markdown |
 | `src/app/runtime.test.tsx` | Aplikasi asli di-mount di DOM: rute lazy, filter galeri, tab README, ganti tema/bahasa, kunci premium, palette ⌘K, 404 |
+| `src/i18n/i18n.test.ts` | Kedua kamus punya kunci yang sama, tidak ada terjemahan kosong, placeholder konsisten, dan setiap `t('...')` di kode benar-benar ada |
 
 ---
 

@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Locale, Localized } from '../core/types';
 import { dictionaries } from './dictionaries';
 
@@ -41,11 +41,16 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     setLocaleState(next);
     try {
       window.localStorage.setItem(STORAGE_KEY, next);
-      document.documentElement.lang = next;
     } catch {
       /* storage can be unavailable in private mode — the UI still works */
     }
   }, []);
+
+  // Screen readers and the browser's own hyphenation follow the UI language,
+  // not the build-time default in index.html.
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
 
   const value = useMemo<I18nValue>(() => {
     const dictionary = dictionaries[locale];
