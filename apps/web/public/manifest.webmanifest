@@ -1,0 +1,13 @@
+{
+  "name": "NexSolarix — Astronomical Atlas",
+  "short_name": "NexSolarix",
+  "description": "An independent digital observatory for exploring the Solar System.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#060b12",
+  "theme_color": "#060b12",
+  "icons": [
+    { "src": "/nexsolarix-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

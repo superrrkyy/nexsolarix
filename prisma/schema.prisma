@@ -1,0 +1,437 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ObjectType {
+  STAR
+  PLANET
+  MOON
+  DWARF_PLANET
+  EXOPLANET
+  ASTEROID
+  COMET
+  GALAXY
+  NEBULA
+  BLACK_HOLE
+  STAR_SYSTEM
+  GALAXY_CLUSTER
+}
+
+enum ConfidenceLevel {
+  VERIFIED
+  ESTIMATED
+  MODELED
+  CANDIDATE
+  UNKNOWN
+}
+
+model CelestialObject {
+  id              String               @id
+  name            String
+  designation     String?
+  objectType      ObjectType
+  subtype         String?
+  summary         String?
+  parentId        String?
+  rightAscension  Float?
+  declination     Float?
+  catalogIds      String[]             @default([])
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  parent          CelestialObject?     @relation("ObjectHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children        CelestialObject[]    @relation("ObjectHierarchy")
+  planet          Planet?
+  star            Star?
+  galaxy          Galaxy?
+  moon            Moon?
+  exoplanet       Exoplanet?
+  asteroid        Asteroid?
+  comet           Comet?
+  nebula          Nebula?
+  blackHole       BlackHole?
+  starSystem      StarSystem?
+  facts           ScientificFact[]
+  relationshipsOut ObjectRelationship[] @relation("RelationshipFrom")
+  relationshipsIn ObjectRelationship[]  @relation("RelationshipTo")
+  objectSources   ObjectSource[]
+  timelineEvents  TimelineEvent[]
+  discoveries     Discovery[]
+  observations    Observation[]
+  missionLinks    MissionObject[]
+  eventLinks      EventObject[]
+  mediaAssets     MediaAsset[]
+  bookmarks       Bookmark[]
+  collectionObjects CollectionObject[]
+  hostedExoplanets Exoplanet[]       @relation("ExoplanetHost")
+  blackHoles      BlackHole[]        @relation("BlackHoleHost")
+  primaryOfSystems StarSystem[]      @relation("SystemPrimaryStar")
+
+  @@index([name])
+  @@index([objectType, name])
+  @@index([parentId])
+  @@index([rightAscension, declination])
+  @@index([designation])
+}
+
+model Planet {
+  objectId          String          @id
+  meanRadiusKm      Float?
+  massKg            Float?
+  gravityMs2        Float?
+  semiMajorAxisAu   Float?
+  orbitalPeriodDays Float?
+  axialTiltDeg      Float?
+  atmosphere        String?
+  object            CelestialObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+}
+
+model Star {
+  objectId          String          @id
+  spectralType      String?
+  stellarClass      String?
+  massKg            Float?
+  radiusKm          Float?
+  luminositySolar   Float?
+  effectiveTempK    Float?
+  metallicity       Float?
+  ageGyrEstimate    Float?
+  apparentMagnitude Float?
+  object            CelestialObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+}
+
+model Galaxy {
+  objectId          String          @id
+  galaxyType        String?
+  diameterLy        Float?
+  massSolar         Float?
+  distanceLy        Float?
+  redshift          Float?
+  starCountEstimate String?
+  starFormationRate Float?
+  object            CelestialObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+}
+
+model Moon {
+  objectId          String          @id
+  meanRadiusKm      Float?
+  massKg            Float?
+  gravityMs2        Float?
+  orbitalPeriodDays Float?
+  atmosphere        String?
+  oceanEvidence     String?
+  object            CelestialObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+}
+
+model Exoplanet {
+  objectId          String          @id
+  hostStarId        String?
+  discoveryYear     Int?
+  discoveryMethod   String?
+  massEarth         Float?
+  radiusEarth       Float?
+  orbitalPeriodDays Float?
+  semiMajorAxisAu   Float?
+  eccentricity      Float?
+  equilibriumTempK  Float?
+  object            CelestialObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+  hostStar          CelestialObject? @relation("ExoplanetHost", fields: [hostStarId], references: [id], onDelete: SetNull)
+
+  @@index([hostStarId])
+  @@index([discoveryYear])
+  @@index([discoveryMethod])
+}
+
+model Asteroid {
+  objectId       String          @id
+  diameterKm     Float?
+  semiMajorAxisAu Float?
+  eccentricity   Float?
+  inclinationDeg Float?
+  object         CelestialObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+}
+
+model Comet {
+  objectId       String          @id
+  diameterKm     Float?
+  eccentricity   Float?
+  inclinationDeg Float?
+  orbitalPeriodY Float?
+  object         CelestialObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+}
+
+model Nebula {
+  objectId     String          @id
+  nebulaType   String?
+  distanceLy   Float?
+  diameterLy   Float?
+  constellation String?
+  object       CelestialObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+}
+
+model BlackHole {
+  objectId       String          @id
+  massSolar      Float?
+  distanceLy    Float?
+  detectionMethod String?
+  hostGalaxyId   String?
+  object         CelestialObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+  hostGalaxy     CelestialObject? @relation("BlackHoleHost", fields: [hostGalaxyId], references: [id], onDelete: SetNull)
+}
+
+model StarSystem {
+  objectId      String          @id
+  systemType    String?
+  primaryStarId String?
+  object        CelestialObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+  primaryStar   CelestialObject? @relation("SystemPrimaryStar", fields: [primaryStarId], references: [id], onDelete: SetNull)
+}
+
+model GalaxyCluster {
+  id          String   @id
+  name        String
+  catalogId   String?  @unique
+  distanceLy  Float?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ScientificFact {
+  id          String         @id @default(cuid())
+  objectId    String
+  key         String
+  label       String
+  value       String
+  unit        String?
+  confidence  ConfidenceLevel
+  note        String?
+  updatedAt   DateTime       @updatedAt
+  object      CelestialObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+  sources     FactSource[]
+
+  @@unique([objectId, key])
+  @@index([key])
+  @@index([confidence])
+}
+
+model Source {
+  id          String         @id
+  organization String
+  title       String
+  url         String
+  description String?
+  usageNotes  String?
+  updatedAt   DateTime       @updatedAt
+  facts       FactSource[]
+  objects     ObjectSource[]
+  timelineEvents TimelineEvent[]
+  discoveries Discovery[]
+  observations Observation[]
+
+  @@index([organization])
+}
+
+model FactSource {
+  factId   String
+  sourceId String
+  fact     ScientificFact @relation(fields: [factId], references: [id], onDelete: Cascade)
+  source   Source         @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@id([factId, sourceId])
+}
+
+model ObjectSource {
+  objectId String
+  sourceId String
+  object   CelestialObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+  source   Source          @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@id([objectId, sourceId])
+}
+
+model ObjectRelationship {
+  id           String          @id @default(cuid())
+  fromObjectId String
+  toObjectId   String
+  relationType String
+  note         String?
+  fromObject   CelestialObject @relation("RelationshipFrom", fields: [fromObjectId], references: [id], onDelete: Cascade)
+  toObject     CelestialObject @relation("RelationshipTo", fields: [toObjectId], references: [id], onDelete: Cascade)
+
+  @@unique([fromObjectId, toObjectId, relationType])
+  @@index([fromObjectId])
+  @@index([toObjectId])
+}
+
+model Mission {
+  id          String          @id
+  name        String
+  agency      String
+  launchDate  DateTime?
+  status      String?
+  destination String?
+  description String?
+  spacecraft  Spacecraft[]
+  objects     MissionObject[]
+  discoveries Discovery[]
+  timeline    TimelineEvent[]
+
+  @@index([name])
+  @@index([launchDate])
+}
+
+model Spacecraft {
+  id          String   @id
+  name        String
+  missionId   String
+  spacecraftType String?
+  description String?
+  mission     Mission  @relation(fields: [missionId], references: [id], onDelete: Cascade)
+
+  @@index([missionId])
+}
+
+model MissionObject {
+  missionId String
+  objectId  String
+  role      String?
+  mission   Mission         @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  object    CelestialObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+
+  @@id([missionId, objectId])
+}
+
+model AstronomicalEvent {
+  id          String          @id
+  title       String
+  eventType   String
+  startsAt    DateTime
+  endsAt      DateTime?
+  visibility  String?
+  explanation String?
+  confidence  ConfidenceLevel @default(VERIFIED)
+  objects     EventObject[]
+  timeline    TimelineEvent[]
+
+  @@index([startsAt])
+  @@index([eventType, startsAt])
+}
+
+model EventObject {
+  eventId  String
+  objectId String
+  role     String?
+  event    AstronomicalEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  object   CelestialObject   @relation(fields: [objectId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, objectId])
+}
+
+model TimelineEvent {
+  id          String          @id @default(cuid())
+  objectId    String
+  missionId   String?
+  eventId     String?
+  sourceId    String?
+  title       String
+  description String?
+  occurredAt  DateTime?
+  dateLabel   String?
+  confidence  ConfidenceLevel
+  object      CelestialObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+  mission     Mission?        @relation(fields: [missionId], references: [id], onDelete: SetNull)
+  event       AstronomicalEvent? @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  source      Source?          @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+
+  @@index([objectId, occurredAt])
+}
+
+model Discovery {
+  id          String          @id @default(cuid())
+  objectId    String
+  missionId   String?
+  sourceId    String?
+  title       String
+  description String?
+  discoveredAt DateTime?
+  object      CelestialObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+  mission     Mission?        @relation(fields: [missionId], references: [id], onDelete: SetNull)
+  source      Source?          @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+
+  @@index([objectId, discoveredAt])
+}
+
+model Observation {
+  id           String          @id @default(cuid())
+  objectId     String
+  sourceId     String?
+  observedAt   DateTime?
+  observatory  String?
+  instrument   String?
+  description  String?
+  object       CelestialObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+  source       Source?          @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+
+  @@index([objectId, observedAt])
+}
+
+model MediaAsset {
+  id          String          @id @default(cuid())
+  objectId    String?
+  url         String
+  caption     String?
+  credit      String?
+  license     String?
+  mediaType   String
+  object      CelestialObject? @relation(fields: [objectId], references: [id], onDelete: SetNull)
+
+  @@index([objectId])
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  passwordHash String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  bookmarks    Bookmark[]
+  collections  UserCollection[]
+}
+
+model Bookmark {
+  userId    String
+  objectId  String
+  createdAt DateTime @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  object    CelestialObject  @relation(fields: [objectId], references: [id], onDelete: Cascade)
+
+  @@id([userId, objectId])
+  @@index([objectId])
+}
+
+model UserCollection {
+  id        String            @id @default(cuid())
+  userId    String
+  name      String
+  createdAt DateTime          @default(now())
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  objects   CollectionObject[]
+
+  @@index([userId, name])
+}
+
+model CollectionObject {
+  collectionId String
+  objectId     String
+  createdAt    DateTime       @default(now())
+  collection   UserCollection  @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  object       CelestialObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, objectId])
+  @@index([objectId])
+}

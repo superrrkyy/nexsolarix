@@ -1,0 +1,37 @@
+{
+  "name": "@nexsolarix/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "test": "tsx --test src/**/*.test.ts src/*.test.ts",
+    "db:generate": "prisma generate --schema ../../prisma/schema.prisma",
+    "db:migrate": "prisma migrate dev --schema ../../prisma/schema.prisma",
+    "db:seed": "tsx ../../prisma/seed.ts"
+  },
+  "dependencies": {
+    "@nexsolarix/astronomy": "0.1.0",
+    "@prisma/client": "6.12.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.1",
+    "helmet": "^8.1.0",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^22.15.30",
+    "eslint": "^9.29.0",
+    "globals": "^16.2.0",
+    "prisma": "6.12.0",
+    "tsx": "^4.19.4",
+    "typescript-eslint": "^8.34.1"
+  }
+}
