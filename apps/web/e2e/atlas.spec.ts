@@ -18,7 +18,7 @@ test('explorer, search, profiles, comparison, missions, and events are navigable
 
   const search = page.getByRole('searchbox', { name: /Search astronomical objects/i });
   await search.fill('Mars');
-  await page.getByRole('option', { name: /Mars/ }).click();
+  await page.getByRole('option', { name: /^Mars\b/ }).click();
   await expect(page).toHaveURL(/\/objects\/mars$/);
   await expect(page.getByRole('heading', { name: 'Mars.' })).toBeVisible();
 
