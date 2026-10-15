@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useMemo, useRef, type RefObject } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Html, Line, OrbitControls } from '@react-three/drei';
+import { Line, OrbitControls } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { AdditiveBlending, BackSide, BufferGeometry, DoubleSide, Float32BufferAttribute, Group, PerspectiveCamera, Vector3 } from 'three';
 import { OBJECTS, ORBIT_MODEL_NOTE, PLANETS, type CelestialObject } from '@nexsolarix/astronomy';
@@ -10,6 +10,7 @@ import { useExplorerStore } from '../stores/useExplorerStore';
 
 const planetObjects = PLANETS.filter((object) => object.orbitalElements);
 const sunObject = OBJECTS.find((object) => object.id === 'sun')!;
+const labelObjects = [sunObject, ...planetObjects];
 const objectById = new Map(OBJECTS.map((object) => [object.id, object]));
 
 function currentPosition(object: CelestialObject, timestamp: number): Vector3 {
@@ -133,11 +134,6 @@ function PlanetBody({ object }: { object: CelestialObject }) {
           <meshBasicMaterial color="#83e8d1" transparent opacity={0.9} />
         </mesh>
       )}
-      <Html position={[0, object.visualRadius + 0.18, 0]} center distanceFactor={13} occlude={false} zIndexRange={[8, 0]}>
-        <button className={`scene-label${selected ? ' is-selected' : ''}`} type="button" onClick={(event) => { event.stopPropagation(); clickable(); }} aria-label={`Select ${object.name}`}>
-          <span className="scene-label-dot" style={{ backgroundColor: object.color }} />{object.name}
-        </button>
-      </Html>
     </group>
   );
 }
@@ -156,13 +152,151 @@ function SunBody() {
         <meshBasicMaterial color="#ffad5d" transparent opacity={0.08} side={BackSide} blending={AdditiveBlending} depthWrite={false} />
       </mesh>
       {selected && <mesh rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[sunObject.visualRadius * 1.55, 0.014, 8, 96]} /><meshBasicMaterial color="#83e8d1" /></mesh>}
-      <Html position={[0, sunObject.visualRadius + 0.28, 0]} center distanceFactor={13} occlude={false} zIndexRange={[8, 0]}>
-        <button className={`scene-label${selected ? ' is-selected' : ''}`} type="button" onClick={(event) => { event.stopPropagation(); select(); }} aria-label="Select the Sun">
-          <span className="scene-label-dot" style={{ backgroundColor: sunObject.color }} />Sun
-        </button>
-      </Html>
       <pointLight color="#ffd3a0" intensity={48} distance={48} decay={2} />
     </group>
+  );
+}
+
+// Project labels into a sibling DOM overlay; Drei Html's nested React roots broke route unmounts.
+function SceneLabelsOverlay({
+  cameraRef,
+  containerRef,
+  interactive
+}: {
+  cameraRef: RefObject<PerspectiveCamera | null>;
+  containerRef: RefObject<HTMLDivElement | null>;
+  interactive: boolean;
+}) {
+  const selectedId = useExplorerStore((state) => state.selectedObjectId);
+  const simulationTime = useExplorerStore((state) => state.simulationTime);
+  const selectObject = useExplorerStore((state) => state.selectObject);
+  const elementRefs = useRef(new Map<string, HTMLButtonElement>());
+  const refCallbacks = useRef(new Map<string, (node: HTMLButtonElement | null) => void>());
+  const timestampRef = useRef(simulationTime);
+
+  useEffect(() => { timestampRef.current = simulationTime; }, [simulationTime]);
+
+  const getElementRef = (id: string) => {
+    let callback = refCallbacks.current.get(id);
+    if (!callback) {
+      callback = (node) => {
+        if (node) elementRefs.current.set(id, node);
+        else elementRefs.current.delete(id);
+      };
+      refCallbacks.current.set(id, callback);
+    }
+    return callback;
+  };
+
+  useEffect(() => {
+    if (!interactive) return;
+    const projectedPositions = new Map(labelObjects.map((object) => [object.id, new Vector3()]));
+    let frameId = 0;
+
+    const projectLabels = () => {
+      const camera = cameraRef.current;
+      const bounds = containerRef.current?.getBoundingClientRect();
+      if (camera && bounds && bounds.width > 0 && bounds.height > 0) {
+        camera.updateMatrixWorld();
+        const date = new Date(timestampRef.current);
+        const visibleLabels: Array<{ button: HTMLButtonElement; x: number; y: number; z: number; width: number; height: number }> = [];
+
+        for (const object of labelObjects) {
+          const point = projectedPositions.get(object.id)!;
+          if (object.orbitalElements) {
+            const position = heliocentricPosition(object.orbitalElements, date);
+            point.set(position.x * ORBIT_DISPLAY_SCALE, position.y * ORBIT_DISPLAY_SCALE, position.z * ORBIT_DISPLAY_SCALE);
+          } else {
+            point.set(0, 0, 0);
+          }
+          point.y += object.id === 'sun' ? sunObject.visualRadius + 0.28 : object.visualRadius + 0.18;
+          point.project(camera);
+
+          const button = elementRefs.current.get(object.id);
+          if (!button) continue;
+          const visible = point.z >= -1 && point.z <= 1 && point.x >= -1 && point.x <= 1 && point.y >= -1 && point.y <= 1;
+          if (!visible) {
+            button.style.display = 'none';
+            continue;
+          }
+          button.style.display = 'flex';
+          visibleLabels.push({
+            button,
+            x: (point.x + 1) * bounds.width / 2,
+            y: (1 - point.y) * bounds.height / 2,
+            z: point.z,
+            width: button.offsetWidth,
+            height: button.offsetHeight
+          });
+        }
+
+        const maxWidth = Math.max(0, ...visibleLabels.map((label) => label.width));
+        const maxHeight = Math.max(0, ...visibleLabels.map((label) => label.height));
+        const stepX = maxWidth + 10;
+        const stepY = maxHeight + 8;
+        const occupied: Array<{ left: number; right: number; top: number; bottom: number }> = [];
+        const offsets: Array<[number, number]> = [
+          [0, 0], [0, -stepY], [0, stepY], [-stepX, 0], [stepX, 0],
+          [-stepX, -stepY], [stepX, -stepY], [-stepX, stepY], [stepX, stepY]
+        ];
+        for (let ring = 2; ring <= 6; ring += 1) {
+          for (let index = -ring; index <= ring; index += 1) {
+            offsets.push([index * stepX, -ring * stepY], [index * stepX, ring * stepY]);
+          }
+          for (let index = -ring + 1; index < ring; index += 1) {
+            offsets.push([-ring * stepX, index * stepY], [ring * stepX, index * stepY]);
+          }
+        }
+
+        for (const label of visibleLabels) {
+          let position = { x: label.x, y: label.y };
+          for (const [offsetX, offsetY] of offsets) {
+            const x = Math.max(label.width / 2 + 4, Math.min(bounds.width - label.width / 2 - 4, label.x + offsetX));
+            const y = Math.max(label.height / 2 + 4, Math.min(bounds.height - label.height / 2 - 4, label.y + offsetY));
+            const rect = {
+              left: x - label.width / 2,
+              right: x + label.width / 2,
+              top: y - label.height / 2,
+              bottom: y + label.height / 2
+            };
+            const collides = occupied.some((other) =>
+              rect.left < other.right + 4 && rect.right + 4 > other.left &&
+              rect.top < other.bottom + 4 && rect.bottom + 4 > other.top
+            );
+            if (collides) continue;
+            position = { x, y };
+            occupied.push(rect);
+            break;
+          }
+          label.button.style.left = `${position.x}px`;
+          label.button.style.top = `${position.y}px`;
+          label.button.style.zIndex = String(Math.round((1 - label.z) * 1000));
+        }
+      }
+      frameId = requestAnimationFrame(projectLabels);
+    };
+
+    frameId = requestAnimationFrame(projectLabels);
+    return () => cancelAnimationFrame(frameId);
+  }, [cameraRef, containerRef, interactive]);
+
+  if (!interactive) return null;
+  return (
+    <div className="scene-label-layer" role="group" aria-label="Select Solar System objects">
+      {labelObjects.map((object) => (
+        <button
+          className={`scene-label scene-label-anchor${selectedId === object.id ? ' is-selected' : ''}`}
+          key={object.id}
+          ref={getElementRef(object.id)}
+          type="button"
+          aria-label={`Select ${object.name}`}
+          style={{ display: 'none' }}
+          onClick={() => selectObject(object.id)}
+        >
+          <span className="scene-label-dot" style={{ backgroundColor: object.color }} />{object.name}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -239,13 +373,24 @@ function CameraRig({
   return null;
 }
 
-function SolarScene({ focusOnSelect, fitSystem, starCount }: { focusOnSelect: boolean; fitSystem: boolean; starCount: number }) {
+function SolarScene({ focusOnSelect, fitSystem, starCount, cameraRef }: {
+  focusOnSelect: boolean;
+  fitSystem: boolean;
+  starCount: number;
+  cameraRef: RefObject<PerspectiveCamera | null>;
+}) {
+  const { camera } = useThree();
   const controlsRef = useRef<OrbitControlsImpl>(null);
   const userInteractedRef = useRef(false);
   const simulationTime = useExplorerStore((state) => state.simulationTime);
   const resetVersion = useExplorerStore((state) => state.cameraResetVersion);
   const date = useMemo(() => new Date(simulationTime), [simulationTime]);
   const initialTarget = useMemo(() => new Vector3(0, 0, 0), []);
+
+  useEffect(() => {
+    cameraRef.current = camera instanceof PerspectiveCamera ? camera : null;
+    return () => { cameraRef.current = null; };
+  }, [camera, cameraRef]);
 
   return (
     <>
@@ -300,9 +445,11 @@ export function UniverseCanvas({
 }) {
   const graphicsMode = useExplorerStore((state) => state.graphicsMode);
   const starCount = useMemo(() => graphicsStarCount(graphicsMode), [graphicsMode]);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const cameraRef = useRef<PerspectiveCamera | null>(null);
 
   return (
-    <div className={`universe-canvas ${className}`} role="group" aria-label="Interactive 3D model of the Solar System">
+    <div ref={containerRef} className={`universe-canvas ${className}`} role="group" aria-label="Interactive 3D model of the Solar System">
       <Canvas
         dpr={graphicsMode === 'ultra' ? [1, 2] : graphicsMode === 'high' ? [1, 1.7] : [1, 1.25]}
         camera={{ position: [0, 8.6, 17.5], fov: 43, near: 0.1, far: fitSystem ? 280 : 180 }}
@@ -311,9 +458,10 @@ export function UniverseCanvas({
         aria-label="Solar System 3D canvas"
       >
         <Suspense fallback={null}>
-          <SolarScene focusOnSelect={focusOnSelect && interactive} fitSystem={fitSystem} starCount={starCount} />
+          <SolarScene focusOnSelect={focusOnSelect && interactive} fitSystem={fitSystem} starCount={starCount} cameraRef={cameraRef} />
         </Suspense>
       </Canvas>
+      <SceneLabelsOverlay cameraRef={cameraRef} containerRef={containerRef} interactive={interactive} />
       {showNote && <div className="scene-model-note"><span className="note-dot" />Schematic scale · {ORBIT_MODEL_NOTE.split('.')[0]}.</div>}
     </div>
   );

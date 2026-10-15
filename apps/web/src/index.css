@@ -235,6 +235,8 @@ h1 em, h2 em { color: #a8dfd2; font-style: normal; font-weight: 360; }
 .webgl-fallback { display: grid; width: 100%; height: 100%; place-items: center; padding: 40px; color: #aab9bf; font-size: 13px; text-align: center; }
 .scene-model-note { position: absolute; bottom: 18px; left: 20px; z-index: 3; display: flex; align-items: center; gap: 7px; max-width: min(70%, 540px); color: #72838d; font: 8px var(--mono); letter-spacing: .015em; }
 .note-dot { width: 5px; height: 5px; flex: 0 0 auto; border-radius: 50%; background: var(--mint); }
+.scene-label-layer { position: absolute; z-index: 2; inset: 0; overflow: hidden; pointer-events: none; }
+.scene-label-anchor { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; }
 .scene-label { display: flex; align-items: center; gap: 5px; padding: 4px 6px; border: 1px solid rgba(182,211,218,.15); border-radius: 4px; background: rgba(5,12,19,.77); color: #bbcbd0; cursor: pointer; font: 8px var(--mono); white-space: nowrap; backdrop-filter: blur(4px); transition: border-color .2s ease, color .2s ease, background .2s ease; }
 .scene-label:hover, .scene-label.is-selected { border-color: rgba(135,217,197,.63); background: rgba(7,19,24,.91); color: #dff9f1; }
 .scene-label-dot { width: 4px; height: 4px; border-radius: 50%; }

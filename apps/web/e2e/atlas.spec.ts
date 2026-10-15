@@ -2,13 +2,19 @@ import { expect, test } from '@playwright/test';
 
 test('explorer, search, profiles, comparison, missions, and events are navigable', async ({ page }) => {
   const consoleErrors: string[] = [];
-  page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => consoleErrors.push(error.message));
 
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /Explore the universe/i })).toBeVisible();
   await page.getByRole('link', { name: /Enter the observatory/i }).click();
   await expect(page).toHaveURL(/\/explore$/);
 
+  const sunSceneLabel = page.getByRole('button', { name: 'Select Sun' });
+  await expect(sunSceneLabel).toBeVisible();
+  await sunSceneLabel.click();
   await page.getByRole('button', { name: /Accessible data mode/i }).click();
   await page.getByRole('button', { name: /Sun/i }).first().click();
   await expect(page.getByRole('heading', { name: 'Sun' })).toBeVisible();
