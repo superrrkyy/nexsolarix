@@ -4,7 +4,7 @@
 <!-- PREMIUM ANIMATED HEADER — SMIL only (works in <img> on GitHub) -->
 <!-- ============================================================ -->
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320" role="img" aria-label="NexSolarix — premium README studio">
-<title>NexSolarix — premium README studio</title>
+NexSolarix — premium README studio
 <defs>
   <linearGradient id="nx-bg" x1="0%" y1="0%" x2="100%" y2="100%">
     <stop offset="0%" stop-color="#05060f"/>
