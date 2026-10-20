@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "audit:layout": "vite-node tools/audit-layout.ts",
+    "readme:assets": "vite-node tools/readme-assets.ts",
     "samples": "vite-node tools/render-samples.ts -- samples",
     "zips": "vite-node tools/write-zips.ts -- samples/zips"
   },
